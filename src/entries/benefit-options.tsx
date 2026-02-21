@@ -7,6 +7,7 @@ export default function BenefitOptions() {
 
     return (
         <div className="w-full max-w-md mx-auto p-6">
+            <h2>Escoge tu beneficio</h2>
             <FlowSelect
                 ariaLabel="Opciones de beneficios"
                 options={[...BENEFITS_OPTIONS]}
