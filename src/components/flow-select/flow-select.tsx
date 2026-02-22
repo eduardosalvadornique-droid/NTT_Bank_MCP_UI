@@ -32,7 +32,7 @@ function normalizeOptions(
 
 export default function FlowSelect({
   options,
-  scale = 1,
+  scale = 0.8,
   value,
   defaultValue,
   onChange,

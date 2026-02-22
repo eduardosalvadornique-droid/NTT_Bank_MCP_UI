@@ -15,7 +15,7 @@ type Props = {
 
 export default function IdentificationFlowInput({
   labels,
-  scale = 1,
+  scale = 0.8,
   dni,
   defaultDni = "",
   onDniChange,

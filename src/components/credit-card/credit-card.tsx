@@ -11,7 +11,7 @@ type Props = {
 
 export default function CreditCard({
   card,
-  scale = 1,
+  scale = 0.8,
   showApplyButton = true,
 }: Props) {
   const highlights = (card.highlights ?? []).slice(0, 4);
