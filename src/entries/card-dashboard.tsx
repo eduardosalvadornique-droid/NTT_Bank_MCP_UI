@@ -24,6 +24,13 @@ export default function CardDashboard() {
     return cards.slice(0, parsedCount);
   }, [cards, searchParams]);
 
+  const hideApplyButton = useMemo(() => {
+    const raw = searchParams.get('hideApplyButton');
+    if (!raw) return false;
+    const normalized = raw.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true' || normalized === 'yes';
+  }, [searchParams]);
+
 
 
   return (
@@ -49,7 +56,7 @@ export default function CardDashboard() {
               w-full max-w-[350px]
             "
             >
-              <CreditCardComp card={card} />
+              <CreditCardComp card={card} showApplyButton={!hideApplyButton} />
             </div>
           ))}
         </div>
@@ -66,7 +73,7 @@ export default function CardDashboard() {
         >
           {visibleCards.map(card => (
             <div key={card.id} className="w-[320px]">
-              <CreditCardComp card={card} />
+              <CreditCardComp card={card} showApplyButton={!hideApplyButton} />
             </div>
           ))}
         </section>

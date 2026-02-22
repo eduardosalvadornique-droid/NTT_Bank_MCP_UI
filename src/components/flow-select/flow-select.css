@@ -50,11 +50,22 @@
 	border: 2px solid rgba(148, 163, 184, 0.8);
 	background: transparent;
 	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .flowSelect__dot.isSelected {
 	border-color: rgba(255, 255, 255, 0.95);
 	background: rgba(255, 255, 255, 0.95);
+}
+
+.flowSelect__dot.isSelected::after {
+	content: "✓";
+	color: #0072bc;
+	font-size: calc(12px * var(--flowSelectScale));
+	font-weight: 700;
+	line-height: 1;
 }
 
 .flowSelect__label {
@@ -66,4 +77,3 @@
 .flowSelect__option.isSelected .flowSelect__label {
 	color: #ffffff;
 }
-
