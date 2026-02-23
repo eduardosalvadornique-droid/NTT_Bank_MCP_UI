@@ -3,7 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import type { CreditCard } from "../lib/types";
 import { useOpenAiGlobal } from "../lib/hooks";
 import CreditCardComp from "../components/credit-card/credit-card";
-import { getDashboardCountFromMcp } from "../lib/mcp";
+
+type DashboardCountResponseMessage = {
+  type: "dashboard_count_response";
+  count?: unknown;
+  value?: unknown;
+};
 
 export default function CardDashboard() {
   const [cards, setCards] = useState<CreditCard[]>([]);
@@ -17,22 +22,48 @@ export default function CardDashboard() {
   }, [toolOutput]);
 
   useEffect(() => {
-    let cancelled = false;
+    if (typeof window === "undefined") return;
 
-    const loadDashboardCount = async () => {
+    const parentOrigin = (() => {
       try {
-        const parsedCount = await getDashboardCountFromMcp();
-        if (!cancelled && parsedCount !== null) {
-          setDashboardCount(parsedCount);
-        }
+        return document.referrer ? new URL(document.referrer).origin : null;
       } catch {
-        if (!cancelled) setDashboardCount(null);
+        return null;
+      }
+    })();
+
+    const parseCount = (raw: unknown) => {
+      const parsed = Number.parseInt(String(raw), 10);
+      if (!Number.isFinite(parsed) || parsed < 0) return null;
+      return parsed;
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      if (parentOrigin && event.origin !== parentOrigin) return;
+
+      const data = event.data as DashboardCountResponseMessage | undefined;
+      if (!data || data.type !== "dashboard_count_response") return;
+
+      const parsed = parseCount(data.count ?? data.value);
+      if (parsed !== null) {
+        setDashboardCount(parsed);
       }
     };
 
-    loadDashboardCount();
+    window.addEventListener("message", onMessage);
+
+    // Ask parent wrapper for the dashboard count.
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "dashboard_count_request",
+        },
+        parentOrigin ?? "*",
+      );
+    }
+
     return () => {
-      cancelled = true;
+      window.removeEventListener("message", onMessage);
     };
   }, []);
 
