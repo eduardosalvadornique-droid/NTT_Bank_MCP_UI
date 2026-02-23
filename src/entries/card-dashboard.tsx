@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import type { CreditCard } from "../lib/types";
 import { useOpenAiGlobal } from "../lib/hooks";
 import CreditCardComp from "../components/credit-card/credit-card";
+import { getDashboardCountFromMcp } from "../lib/mcp";
 
 export default function CardDashboard() {
   const [cards, setCards] = useState<CreditCard[]>([]);
@@ -19,18 +20,9 @@ export default function CardDashboard() {
     let cancelled = false;
 
     const loadDashboardCount = async () => {
-      if (typeof window === "undefined") return;
-      if (!window.isSecureContext) return;
-      if (typeof window.openai?.callTool !== "function") return;
-
       try {
-        const res = await window.openai.callTool("get_dashboard_count", {});
-        const rawCount =
-          (res as any)?.structuredContent?.count ??
-          (res as any)?.structured_content?.count;
-        const parsedCount = Number.parseInt(String(rawCount), 10);
-
-        if (!cancelled && Number.isFinite(parsedCount) && parsedCount >= 0) {
+        const parsedCount = await getDashboardCountFromMcp();
+        if (!cancelled && parsedCount !== null) {
           setDashboardCount(parsedCount);
         }
       } catch {

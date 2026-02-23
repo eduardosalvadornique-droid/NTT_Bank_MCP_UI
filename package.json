@@ -15,6 +15,7 @@
     "node": "22.x"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "latest",
     "express": "^5.2.1",
     "flowbite": "^4.0.1",
     "flowbite-react": "^0.12.17",
