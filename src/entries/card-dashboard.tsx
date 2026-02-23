@@ -1,42 +1,64 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import type { CreditCard } from '../lib/types';
-import { useOpenAiGlobal } from '../lib/hooks';
-import CreditCardComp from '../components/credit-card/credit-card';
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import type { CreditCard } from "../lib/types";
+import { useOpenAiGlobal } from "../lib/hooks";
+import CreditCardComp from "../components/credit-card/credit-card";
 
 export default function CardDashboard() {
   const [cards, setCards] = useState<CreditCard[]>([]);
+  const [dashboardCount, setDashboardCount] = useState<number | null>(null);
   const [searchParams] = useSearchParams();
-  const toolOutput = useOpenAiGlobal('toolOutput');
+  const toolOutput = useOpenAiGlobal("toolOutput");
 
   useEffect(() => {
     const list = toolOutput?.cardList || [];
     setCards(list);
   }, [toolOutput]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDashboardCount = async () => {
+      if (typeof window === "undefined") return;
+      if (!window.isSecureContext) return;
+      if (typeof window.openai?.callTool !== "function") return;
+
+      try {
+        const res = await window.openai.callTool("get_dashboard_count", {});
+        const rawCount =
+          (res as any)?.structuredContent?.count ??
+          (res as any)?.structured_content?.count;
+        const parsedCount = Number.parseInt(String(rawCount), 10);
+
+        if (!cancelled && Number.isFinite(parsedCount) && parsedCount >= 0) {
+          setDashboardCount(parsedCount);
+        }
+      } catch {
+        if (!cancelled) setDashboardCount(null);
+      }
+    };
+
+    loadDashboardCount();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const visibleCards = useMemo(() => {
-    const rawCount = searchParams.get('count');
-    if (rawCount === null) return cards;
-
-    const parsedCount = Number.parseInt(rawCount, 10);
-    if (Number.isNaN(parsedCount) || parsedCount < 0) return cards;
-
-    return cards.slice(0, parsedCount);
-  }, [cards, searchParams]);
+    if (dashboardCount === null) return cards;
+    return cards.slice(0, dashboardCount);
+  }, [cards, dashboardCount]);
 
   const hideApplyButton = useMemo(() => {
-    const raw = searchParams.get('hideApplyButton');
+    const raw = searchParams.get("hideApplyButton");
     if (!raw) return false;
     const normalized = raw.trim().toLowerCase();
-    return normalized === '1' || normalized === 'true' || normalized === 'yes';
+    return normalized === "1" || normalized === "true" || normalized === "yes";
   }, [searchParams]);
-
-
 
   return (
     <div className="w-full bg-transparent">
       <div className="mx-auto max-w-[1200px]">
-
         {/* MOBILE SLIDER */}
         <div
           className="
@@ -48,7 +70,7 @@ export default function CardDashboard() {
           lg:hidden
         "
         >
-          {visibleCards.map(card => (
+          {visibleCards.map((card) => (
             <div
               key={card.id}
               className="
@@ -71,13 +93,12 @@ export default function CardDashboard() {
           px-6
         "
         >
-          {visibleCards.map(card => (
+          {visibleCards.map((card) => (
             <div key={card.id} className="w-[320px]">
               <CreditCardComp card={card} showApplyButton={!hideApplyButton} />
             </div>
           ))}
         </section>
-
       </div>
     </div>
   );
