@@ -18,10 +18,16 @@ const APP_ROUTES = [
 function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const existingOpenAi = window.openai ?? {};
+    const hasToolOutput = Boolean(existingOpenAi.toolOutput);
+
     window.openai = {
-      toolOutput: {
-        cardList: mockCards,
-      },
+      ...existingOpenAi,
+      toolOutput: hasToolOutput
+        ? existingOpenAi.toolOutput
+        : {
+            cardList: mockCards,
+          },
     };
 
     window.dispatchEvent(new Event('openai:set_globals'));
